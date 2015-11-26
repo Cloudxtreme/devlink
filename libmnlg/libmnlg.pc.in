@@ -1,0 +1,10 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: libmnlg
+Description: Libmnl Generic Netlink helper library.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lmnlg
+Cflags: -I${includedir}

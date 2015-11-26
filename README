@@ -1,0 +1,19 @@
+# devlink #
+
+## Install
+
+    $ ./autogen.sh
+    $ ./configure
+    $ make
+    $ sudo make install
+
+## Authors
+
+* Jiri Pirko <jiri@mellanox.com>
+
+## License
+
+Copyright (C) 2016 Jiri Pirko <jiri@mellanox.com>
+
+devlink is distributed under GNU Lesser General Public License version 2.1.
+See the file "COPYING" in the source distribution for information on terms & conditions for accessing and otherwise using devlink.
