@@ -380,6 +380,25 @@ static int dl_argv_indexes(struct dl *dl, uint32_t *p_index,
 	return 0;
 }
 
+static int dl_argv_uint32_t(struct dl *dl, uint32_t *p_val)
+{
+	char *str = dl_argv_next(dl);
+	int val;
+
+	if (!str) {
+		pr_err("Unsigned number expected\n");
+		return -EINVAL;
+	}
+
+	val = strtouint(str);
+	if (val < 0) {
+		pr_err("\"%s\" is not a number\n", str);
+		return val;
+	}
+	*p_val = val;
+	return 0;
+}
+
 static void pr_out_dev(struct nlattr **tb)
 {
 	pr_out("%d: %s:", mnl_attr_get_u32(tb[DEVLINK_ATTR_INDEX]),
@@ -634,9 +653,69 @@ static int cmd_port_set(struct dl *dl)
 	return 0;
 }
 
+static int cmd_port_split(struct dl *dl)
+{
+	struct nlmsghdr *nlh;
+	uint16_t flags = NLM_F_REQUEST | NLM_F_ACK;
+	uint32_t index;
+	uint32_t port_index;
+	uint32_t count;
+	int err;
+
+	nlh = mnlg_msg_prepare(dl->nlg, DEVLINK_CMD_PORT_SPLIT, flags);
+	err = dl_argv_indexes(dl, &index, &port_index);
+	if (err)
+		return err;
+	mnl_attr_put_u32(nlh, DEVLINK_ATTR_INDEX, index);
+	mnl_attr_put_u32(nlh, DEVLINK_ATTR_PORT_INDEX, port_index);
+
+	err = dl_argv_uint32_t(dl, &count);
+	if (err)
+		return err;
+	mnl_attr_put_u32(nlh, DEVLINK_ATTR_PORT_SPLIT_COUNT, count);
+
+	err = _mnlg_socket_send(dl->nlg, nlh);
+	if (err)
+		return err;
+
+	err = _mnlg_socket_recv_run(dl->nlg, cmd_dev_show_cb, NULL);
+	if (err)
+		return err;
+
+	return 0;
+}
+
+static int cmd_port_unsplit(struct dl *dl)
+{
+	struct nlmsghdr *nlh;
+	uint16_t flags = NLM_F_REQUEST | NLM_F_ACK;
+	uint32_t index;
+	uint32_t port_index;
+	int err;
+
+	nlh = mnlg_msg_prepare(dl->nlg, DEVLINK_CMD_PORT_UNSPLIT, flags);
+	err = dl_argv_indexes(dl, &index, &port_index);
+	if (err)
+		return err;
+	mnl_attr_put_u32(nlh, DEVLINK_ATTR_INDEX, index);
+	mnl_attr_put_u32(nlh, DEVLINK_ATTR_PORT_INDEX, port_index);
+
+	err = _mnlg_socket_send(dl->nlg, nlh);
+	if (err)
+		return err;
+
+	err = _mnlg_socket_recv_run(dl->nlg, cmd_dev_show_cb, NULL);
+	if (err)
+		return err;
+
+	return 0;
+}
+
 static void cmd_port_help() {
 	pr_out("Usage: dl port show [DEV/PORT_INDEX]\n");
 	pr_out("Usage: dl port set DEV/PORT_INDEX [ type { eth | ib | auto} ]\n");
+	pr_out("Usage: dl port split DEV/PORT_INDEX count\n");
+	pr_out("Usage: dl port unsplit DEV/PORT_INDEX\n");
 }
 
 static int cmd_port(struct dl *dl)
@@ -650,6 +729,12 @@ static int cmd_port(struct dl *dl)
 	} else if (dl_argv_match(dl, "set")) {
 		dl_arg_inc(dl);
 		return cmd_port_set(dl);
+	} else if (dl_argv_match(dl, "split")) {
+		dl_arg_inc(dl);
+		return cmd_port_split(dl);
+	} else if (dl_argv_match(dl, "unsplit")) {
+		dl_arg_inc(dl);
+		return cmd_port_unsplit(dl);
 	} else {
 		pr_err("Command \"%s\" not found\n", dl_argv(dl));
 		return -ENOENT;

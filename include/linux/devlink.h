@@ -33,6 +33,9 @@ enum devlink_command {
 	DEVLINK_CMD_PORT_NEW,
 	DEVLINK_CMD_PORT_DEL,
 
+	DEVLINK_CMD_PORT_SPLIT,
+	DEVLINK_CMD_PORT_UNSPLIT,
+
 	/* add new commands above here */
 
 	__DEVLINK_CMD_MAX,
@@ -74,6 +77,7 @@ enum devlink_attr {
 	DEVLINK_ATTR_PORT_NETDEV_IFINDEX,	/* u32 */
 	DEVLINK_ATTR_PORT_NETDEV_NAME,		/* string */
 	DEVLINK_ATTR_PORT_IBDEV_NAME,		/* string */
+	DEVLINK_ATTR_PORT_SPLIT_COUNT,		/* u32 */
 
 	/* add new attributes above here, update the policy in devlink.c */
 
